@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comentarios</title>
+</head>
+<body>
+    <div class="comment-section">
+        <h2>Deja tu comentario</h2>
+        <input type="text" id="name" placeholder="Escribe tu nombre">
+        <textarea id="comment" placeholder="Escribe tu comentario"></textarea>
+        <button onclick="addComment()">Enviar Comentario</button>
+    </div>
+
+    <div class="comments">
+        <h2>Comentarios</h2>
+        <ul id="comment-list"></ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@octokit/rest"></script>
+    <script>
+        const octokit = new Octokit();
+
+        // Función para agregar un comentario
+        async function addComment() {
+            const name = document.getElementById("name").value;
+            const comment = document.getElementById("comment").value;
+
+            if (name === "" || comment === "") {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            const issueTitle = name;
+            const issueBody = comment;
+
+            try {
+                // Crear un nuevo Issue
+                await octokit.rest.issues.create({
+                    owner: 'Dancrafgamer',
+                    repo: 'page',
+                    title: issueTitle,
+                    body: issueBody
+                });
+
+                // Limpiar los campos después de agregar un comentario
+                document.getElementById("name").value = "";
+                document.getElementById("comment").value = "";
+
+                // Actualizar los comentarios mostrados
+                fetchComments();
+            } catch (error) {
+                console.error('Error al crear el Issue:', error);
+            }
+        }
+
+        // Función para obtener y mostrar los comentarios
+        async function fetchComments() {
+            try {
+                const { data: issues } = await octokit.rest.issues.list({
+                    owner: 'Dancrafgamer',
+                    repo: 'page'
+                });
+
+                const commentList = document.getElementById("comment-list");
+                commentList.innerHTML = ''; // Limpiar la lista de comentarios
+
+                issues.forEach(issue => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${issue.title}: ${issue.body}`;
+                    commentList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error al obtener los Issues:', error);
+            }
+        }
+
+        // Al cargar la página, obtener y mostrar los comentarios
+        window.onload = fetchComments;
+    </script>
+</body>
+</html>
